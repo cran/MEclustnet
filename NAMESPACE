@@ -1,0 +1,14 @@
+exportPattern("^[[:alpha:]]+")
+importFrom("graphics", "plot", "points", "segments")
+importFrom("stats", "coef", "dist", "glm", "rchisq", "rmultinom", "runif", "sd", "var")
+importFrom("utils", "flush.console", "setTxtProgressBar","txtProgressBar")
+import(
+  MASS,
+  mvtnorm,
+  mclust,
+  nnet,
+  ellipse,
+  latentnet,
+  vegan,
+  e1071
+)
