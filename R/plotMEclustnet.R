@@ -6,7 +6,11 @@ function(fit, Y, link.vars, mix.vars)
   zmean = apply(fit$zstore,c(1:2),mean,na.rm=TRUE)
   Kmode = as.numeric(apply(fit$Kstore,2,function(v){names(sort(-table(v)))[1]}))
 
-  plot(zmean,type="n",xlim=c(-7,7), ylim=c(-6,6),col=Kmode,xlab="Dimension 1",ylab="Dimension 2", main = paste("Link variables:", c(link.vars), "Mix variables:", mix.vars))
+  xlims = c(min(fit$zstore[,1,]), max(fit$zstore[,1,]))
+  ylims = c(min(fit$zstore[,2,]), max(fit$zstore[,2,]))
+  plot(zmean,type="n",xlim=xlims, ylim=ylims,col=Kmode,xlab="Dimension 1",
+       ylab="Dimension 2",
+  main = paste("Link covariates:", paste(link.vars, collapse =""), "\n", "Mixing proportion covariates:", paste(mix.vars, collapse ="")))
 
   mat = matrix(1:n,n,n)
   edges = cbind(mat[Y==1],t(mat)[Y==1])

@@ -70,76 +70,77 @@ function(Y, covars, link.vars = c(1:ncol(covars)), mix.vars = c(1:ncol(covars)),
   countbeta = countz = counttau = 0                 # Record acceptance rates
 
   if((sum(link.vars)==1 && sum(mix.vars)==1) == F){
-    #### Run Metropolis/Gibbs algorithm ####
-    if(verbose){
-      cat("Fitting the mixture of expert latent position cluster model....\n")
-      flush.console()
-      pbar = txtProgressBar(min = 1, max = itermax, style = 3)
-    }
-    for(iter in 1:itermax)
+  #### Run Metropolis/Gibbs algorithm ####
+  if(verbose){
+    cat("Fitting the mixture of expert latent position cluster model....\n")
+    flush.console()
+    pbar = txtProgressBar(min = 1, max = itermax, style = 3)
+  }
+  for(iter in 1:itermax)
+  {
+    if(verbose) setTxtProgressBar(pbar, iter)
+
+    if (iter<=uphill){rho = 0.01}else{rho = rho.input}
+
+    res = updatez(n, z, x.link, delta, beta, y, mu, K, sigma2, Id, pis, iter, uphill, countz, delete, d, n.tilde)
+    z = res[[1]]
+    delta = res[[2]]
+    pis = res[[3]]
+    countz = res[[4]]
+    if(iter == uphill)     # At end of uphill steps store zMAP estimates
     {
-      if(verbose) setTxtProgressBar(pbar, iter)
+      zMAP = z
+      zMAP = sweep(zMAP,2,apply(zMAP,2,mean), "-")     # Reference configuration centred at the origin
+      z = zMAP
+    }
+    # Once have zMAP estimates, perform rotation.
+    if(iter > uphill){ z = invariant(z, zMAP)}
 
-      if (iter<=uphill){rho = 0.01}else{rho = rho.input}
+    res = updatebeta(beta, p, x.link, delta, y, epsilon, psi, psi.inv, pis, countbeta, rho, n.tilde)
+    beta = res[[1]]
+    countbeta = res[[2]]
+    pis = calcpis(beta, x.link, delta, n.tilde)
 
-      res = updatez(n, z, x.link, delta, beta, y, mu, K, sigma2, Id, pis, iter, uphill, countz, delete, d, n.tilde)
-      z = res[[1]]
-      delta = res[[2]]
-      pis = res[[3]]
-      countz = res[[4]]
-      if(iter == uphill)     # At end of uphill steps store zMAP estimates
-      {
-        zMAP = z
-        zMAP = sweep(zMAP,2,apply(zMAP,2,mean), "-")     # Reference configuration centred at the origin
-        z = zMAP
-      }
-      # Once have zMAP estimates, perform rotation.
-      if(iter > uphill){ z = invariant(z, zMAP)}
+    res = updatetau(G, x.mix, lambda, Sigmag, Sigmag.inv, K, gammag, tau, counttau, rho)
+    tau = res[[1]]
+    lambda = res[[2]]
+    counttau = res[[3]]
 
-      res = updatebeta(beta, p, x.link, delta, y, epsilon, psi, psi.inv, pis, countbeta, rho, n.tilde)
-      beta = res[[1]]
-      countbeta = res[[2]]
-      pis = calcpis(beta, x.link, delta, n.tilde)
+    mu = updatemu(G, z, K, m, sigma2, omega2, Id, mu, d)
+    # Store centred, rotated mu's as muMAP for label switching reference
+    if(iter == uphill){ muMAP = mu }
 
-      res = updatetau(G, x.mix, lambda, Sigmag, Sigmag.inv, K, gammag, tau, counttau, rho)
-      tau = res[[1]]
-      lambda = res[[2]]
-      counttau = res[[3]]
+    sigma2 = updatesigma2(G, alpha, m, d, sigma02, z, K, mu, sigma2)
+    K = updateK(G, K, z, mu, sigma2, Id, lambda)
+    m = calcm(m, G, K)
 
-      mu = updatemu(G, z, K, m, sigma2, omega2, Id, mu, d)
-      # Store centred, rotated mu's as muMAP for label switching reference
-      if(iter == uphill){ muMAP = mu }
+    if((iter/thin) == round(iter/thin) & iter > (uphill+burnin))               # If it's a thinned iteration
+    {
+      res = labelswitch(mu, sigma2,lambda, tau, K, G, d, perms, muMAP, iter, uphill, burnin, thin, s, x.mix)
+      mu = res[[1]]
+      sigma2 = res[[2]]
+      lambda = res[[3]]
+      tau = res[[4]]
+      K = res[[5]]
+      m = calcm(m , G, K)
 
-      sigma2 = updatesigma2(G, alpha, m, d, sigma02, z, K, mu, sigma2)
-      K = updateK(G, K, z, mu, sigma2, Id, lambda)
-      m = calcm(m, G, K)
+      store.ind = (iter-burnin-uphill)/thin
+      zstore[,,store.ind] = z                   # Store thinned,rotated samples
+      betastore[store.ind,] = beta
+      Kstore[store.ind,] = K
+      mustore[,,store.ind] = mu
+      sigma2store[store.ind,] = sigma2
+      lambdastore[,,store.ind] = lambda
+      taustore[,,store.ind] = tau
+      LLstore[store.ind] = calcloglikelihood(pis,y)
+    } #if iter/thin
+    #plot(z, col=K)
+  } # iter
 
-      if((iter/thin) == round(iter/thin) & iter > (uphill+burnin))               # If it's a thinned iteration
-      {
-        res = labelswitch(mu, sigma2,lambda, tau, K, G, d, perms, muMAP, iter, uphill, burnin, thin, s, x.mix)
-        mu = res[[1]]
-        sigma2 = res[[2]]
-        lambda = res[[3]]
-        tau = res[[4]]
-        K = res[[5]]
-        m = calcm(m , G, K)
-
-        store.ind = (iter-burnin-uphill)/thin
-        zstore[,,store.ind] = z                   # Store thinned,rotated samples
-        betastore[store.ind,] = beta
-        Kstore[store.ind,] = K
-        mustore[,,store.ind] = mu
-        sigma2store[store.ind,] = sigma2
-        lambdastore[,,store.ind] = lambda
-        taustore[,,store.ind] = tau
-        LLstore[store.ind] = calcloglikelihood(pis,y)
-      } #if iter/thin
-      #plot(z, col=K)
-    } # iter
-
-    if(verbose)  close(pbar)
-    res = list(zstore = zstore, betastore = betastore, Kstore = Kstore, mustore = mustore, sigma2store = sigma2store,lambdastore = lambdastore, taustore = taustore, LLstore = LLstore, G = G, d = d, countbeta = countbeta, counttau = counttau)
-    res
+  if(verbose)  close(pbar)
+  res = list(zstore = zstore, betastore = betastore, Kstore = Kstore, mustore = mustore, sigma2store = sigma2store,lambdastore = lambdastore, taustore = taustore, LLstore = LLstore, G = G, d = d, countbeta = countbeta, counttau = counttau)
+  class(res) = 'MEclustnet'
+  res
   }else{
     if(verbose){
       cat("You have requested to fit the latent position cluster model with no covariates.\n")
@@ -147,4 +148,4 @@ function(Y, covars, link.vars = c(1:ncol(covars)), mix.vars = c(1:ncol(covars)),
     }
     latentnet.fit
   }
-} # End MEclustnet
+}

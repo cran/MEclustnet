@@ -10,7 +10,7 @@
 \details{
 
 The DESCRIPTION file:
-\packageDESCRIPTION{MEclustnet}
+\packageDescription{MEclustnet}
 \packageIndices{MEclustnet}
 The main function of interest is MEclustnet which will fit a mixture of experts latent position cluster model to a binary network.
 }
