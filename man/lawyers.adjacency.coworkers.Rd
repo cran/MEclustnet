@@ -9,7 +9,7 @@ Data on whether or not 71 lawyers in a northeastern American law firm work with 
 }
 \usage{data("lawyers.adjacency.coworkers")}
 \format{
-  A 71 x 71 binary matrix, with 0 down the diagonal.
+ A 71 x 71 binary matrix, with 0 down the diagonal.
 }
 \source{
 E. Lazega, The Collegial Phenomenon: The Social Mechanisms of Cooperation Among Peers in a Corporate Law Partnership, Oxford University Press, Oxford, England, 2001.
@@ -19,6 +19,6 @@ Isobel Claire Gormley and Thomas Brendan Murphy. (2010) A Mixture of Experts Lat
 }
 \examples{
 data(lawyers.adjacency.coworkers)
-str(lawyers.adjacency.coworkers)
+str(lawyers.adjacency.coworkers) 
 }
 \keyword{datasets}

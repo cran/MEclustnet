@@ -1,6 +1,6 @@
 \name{formatting.covars}
 \alias{formatting.covars}
-
+%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Reformat matrix of covariates.
 }
@@ -12,7 +12,7 @@ formatting.covars(covars, link.vars, mix.vars, n)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{covars}{
+   \item{covars}{
 The n x p data frame of node specific covariates passed in to the overall \code{\link{MEclustnet}} function. The first column should be a column of 1's and categorical variables should be factors.
 }
   \item{link.vars}{
@@ -38,6 +38,7 @@ A list with
 \references{
 Isobel Claire Gormley and Thomas Brendan Murphy. (2010) A Mixture of Experts Latent Position Cluster Model for Social Network Data. Statistical Methodology, 7 (3), pp.385-405.
 }
+
 \author{
 Isobel Claire Gormley <claire.gormley@ucd.ie>
 }
@@ -47,7 +48,7 @@ Isobel Claire Gormley <claire.gormley@ucd.ie>
 }
 \examples{
 data(us.twitter.covariates)
-link.vars = c(1,5,7,8)
+link.vars = c(1)
 mix.vars = c(1,5,7,8)
 res = formatting.covars(us.twitter.covariates, link.vars, mix.vars, nrow(us.twitter.covariates))
 dim(res$x.link)

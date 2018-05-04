@@ -8,8 +8,8 @@ Label switching correction.
 This function corrects for the issue of label switching when fitting mixture models in a Bayesian setting.
 }
 \usage{
-labelswitch(mu, sigma2, lambda, tau, K, G, d, perms, muMAP,
-iter, uphill, burnin, thin, s, x.mix)
+labelswitch(mu, sigma2, lambda, tau, K, G, d, perms, muMAP, iter, 
+uphill, burnin, thin, s, x.mix)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -56,8 +56,7 @@ Thinning frequency of the MCMC chain to ensure independent samples.
 Number of columns in the reformatted covariates matrix for the mixing proportions model, output by \code{\link{formatting.covars}}.
 }
   \item{x.mix}{
-The reformatted covariates matrix for the mixing proportions model, output by \code{\link{formatting.covars}.
-}
+The reformatted covariates matrix for the mixing proportions model, output by \code{\link{formatting.covars}.}
 }
 }
 \details{

@@ -2,7 +2,7 @@
 \alias{MEclustnet}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Fit a mixture of experts latent position cluster model to network data.
+Fitting the mixture of experts latent position cluster model to network data.
 }
 \description{
 MEclustnet will fit a mixture of experts latent position cluster model to a binary network.
@@ -123,7 +123,7 @@ library(latentnet)
 data(us.twitter.adjacency)
 data(us.twitter.covariates)
 
-link.vars = c(1,5,7,8)
+link.vars = c(1)
 mix.vars = c(1,5,7,8)
 
 \dontrun{fit = MEclustnet(us.twitter.adjacency, us.twitter.covariates,
