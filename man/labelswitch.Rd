@@ -8,8 +8,8 @@ Label switching correction.
 This function corrects for the issue of label switching when fitting mixture models in a Bayesian setting.
 }
 \usage{
-labelswitch(mu, sigma2, lambda, tau, K, G, d, perms, muMAP, iter, 
-uphill, burnin, thin, s, x.mix)
+labelswitch(mu, sigma2, lambda, tau, K, G, d, perms, 
+muMAP, iter, uphill, burnin, thin, s, x.mix)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -69,8 +69,8 @@ A list containing:list(mu, sigma2, lambda, tau, K)
 \item{lambda}{The label-corrected matrix of mixing proportions.}
 \item{tau}{The label-corrected matrix of logistic regression coefficients for the mixing proportions model.}
 \item{K}{The label-corrected vector of length n detailing the number of the cluster to which each node belongs.}
-
 }
+
 \references{
 Isobel Claire Gormley and Thomas Brendan Murphy. (2010) A Mixture of Experts Latent Position Cluster Model for Social Network Data. Statistical Methodology, 7 (3), pp.385-405.
 }

@@ -8,8 +8,8 @@ Update step for the latent locations.
 A Metropolis-Hastings update step for the latent locations.
 }
 \usage{
-updatez(n, z, x.link, delta, beta, y, mu, K, sigma2, Id, pis,
-iter, uphill, countz, delete, d, n.tilde)
+updatez(n, z, x.link, delta, beta, y, mu, K, sigma2, 
+Id, pis, iter, uphill, countz, delete, d, n.tilde)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

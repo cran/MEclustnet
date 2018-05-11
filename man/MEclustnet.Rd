@@ -147,8 +147,8 @@ for(g in 1:fit$G)
 {
   clusters[[g]] = us.twitter.covariates[summ$Kmode==g,c("name", "party")]
 }
-clusters}
-
+clusters
+}
 }
 
 \keyword{ methods }
