@@ -1,3 +1,109 @@
+#' Fitting the mixture of experts latent position cluster model to network data.
+#'
+#' @description MEclustnet will fit a mixture of experts latent position cluster model to a binary network.
+#'
+#' @param Y An n x n binary matrix of links between n nodes, with 0 on the diagonal and 1 indicating a link.
+#' @param covars An n x p data frame of node specific covariates. Categorical variables should be factors. First column should be a column of 1s, and should always be passed in.
+#' @param link.vars A vector of the column numbers of the data frame \code{covars} to be included in link probability model. If none are to be included, this argument should be 1.
+#' @param mix.vars A vector of the column numbers of the data frame \code{covars} to be included in mixing proportions model. If none are to be included, argument should be 1.
+#' @param G The number of clusters in the model to be fitted.
+#' @param d The dimension of the latent space.
+#' @param itermax Maximum number of iterations in the MCMC chain.
+#' @param uphill Number of iterations for which uphill only steps in the MCMC chain should be run to find \emph{maximum a posteriori} estimates.
+#' @param burnin Number of burnin iterations in the MCMC chain.
+#' @param thin The degree of thinning to be applied to the MCMC chain.
+#' @param rho.input Scaling factor to achieve desirable acceptance rates in Metropolis-Hastings steps.
+#' @param verbose Print progress updates to screen? Recommended as the models are slow to run.
+#' @param ... Additional arguments.
+#'
+#' @details This function fits the mixture of experts latent position cluster model to a binary network via a Metropolis-within-Gibbs sampler. Covariates can influence either the link probabilities between nodes and/or the cluster memberships of nodes.
+#' @return An object of class \code{MEclustnet}, which is a list containing:
+#' \describe{
+#' \item{zstore}{An n x d x store.dim array of sampled latent location matrices, where store.dim is the number of post burnin thinned iterations.}
+#' \item{betastore}{A store.dim x p matrix of sampled beta vectors, the logistic regression parameters of the link probabilities model.}
+#' \item{Kstore}{A store.dim x n matrix of sampled cluster membership vectors.}
+#' \item{mustore}{A G x d x store.dim array of sampled cluster mean latent location matrices.}
+#' \item{sigma2store}{A store.dim x G matrix of sampled cluster variances.}
+#' \item{lambdastore}{An n x G x store.dim array of sampled mixing proportion matrices.}
+#' \item{taustore}{A G x s x store.dim array of sampled tau vectors, the logistic regression parameters of the mixing proportions model, where s is the length of tau.}
+#' \item{LLstore}{A vector of length store.dim storing the loglikelihood from each stored iteration.}
+#' \item{G}{The number of clusters fitted}
+#' \item{d}{The dimension of the latent space}
+#' \item{countbeta}{Count of accepted beta values}
+#' \item{counttau}{Count of accepted tau values}
+#' }
+#' @seealso \code{\link{MEclustnet}}
+#' @references Isobel Claire Gormley and Thomas Brendan Murphy. (2010) A Mixture of Experts Latent Position Cluster Model for Social Network Data. Statistical Methodology, 7 (3), pp.385-405.
+#' @importFrom latentnet ergmm
+#' @importFrom stats dist glm coef
+#' @importFrom nnet multinom
+#' @importFrom e1071 permutations
+#' @importFrom utils flush.console txtProgressBar setTxtProgressBar
+#'
+#' @examples #################################################################
+#' # An example from the Gormley and Murphy (2010) paper, using the Lazega lawyers friendship network.
+#' #################################################################
+#' # Number of iterations etc. are set to low values for illustrative purposes.
+#' # Longer run times are likely to be required to achieve sufficient mixing.
+#'
+#' library(latentnet)
+#' data(lawyers.adjacency.friends)
+#' data(lawyers.covariates)
+#'
+#' link.vars = c(1)
+#' mix.vars = c(1,4,5)
+#'
+#' \donttest{fit = MEclustnet(lawyers.adjacency.friends, lawyers.covariates,
+#' link.vars, mix.vars, G=2, d=2, itermax = 500, burnin = 50, uphill = 1, thin=10)
+#'
+#' # Plot the trace plot of the mean of dimension 1 for each cluster.
+#' matplot(t(fit$mustore[,1,]), type="l", xlab="Iteration", ylab="Parameter")
+#'
+#' # Compute posterior summaries
+#' summ = summaryMEclustnet(fit, lawyers.adjacency.friends)
+#' plot(summ$zmean, col=summ$Kmode, xlab="Dimension 1", ylab="Dimension 2", pch=summ$Kmode,
+#'      main = "Posterior mean latent location for each node.")
+#'
+#' # Plot the resulting latent space, with uncertainties
+#' plotMEclustnet(fit, lawyers.adjacency.friends, link.vars, mix.vars)}
+#'
+#' #################################################################
+#' # An example analysing a 2016 Twitter network of US politicians.
+#' #################################################################
+#' # Number of iterations etc. are set to low values for illustrative purposes.
+#' # Longer run times are likely to be required to achieve sufficient mixing.
+#'
+#' library(latentnet)
+#' data(us.twitter.adjacency)
+#' data(us.twitter.covariates)
+#'
+#' link.vars = c(1)
+#' mix.vars = c(1,5,7,8)
+#'
+#' \donttest{fit = MEclustnet(us.twitter.adjacency, us.twitter.covariates,
+#' link.vars, mix.vars, G=4, d=2, itermax = 500, burnin = 50, uphill = 1, thin=10)
+#'
+#' # Plot the trace plot of the mean of dimension 1 for each cluster.
+#' matplot(t(fit$mustore[,1,]), type="l", xlab="Iteration", ylab="Parameter")
+#'
+#' # Compute posterior summaries
+#' summ = summaryMEclustnet(fit, us.twitter.adjacency)
+#'
+#' plot(summ$zmean, col=summ$Kmode, xlab="Dimension 1", ylab="Dimension 2", pch=summ$Kmode,
+#'      main = "Posterior mean latent location for each node.")
+#'
+#' # Plot the resulting latent space, with uncertainties
+#' plotMEclustnet(fit, us.twitter.adjacency, link.vars, mix.vars)
+#'
+#' # Examine which politicians are in which clusters...
+#' clusters = list()
+#' for(g in 1:fit$G)
+#' {
+#'   clusters[[g]] = us.twitter.covariates[summ$Kmode==g,c("name", "party")]
+#' }
+#' clusters
+#' }
+#' @export
 MEclustnet <-
 function(Y, covars, link.vars = c(1:ncol(covars)), mix.vars = c(1:ncol(covars)), G=2, d=2, itermax = 10000, uphill = 100, burnin = 1000, thin = 10, rho.input = 1, verbose=TRUE, ...)
 {

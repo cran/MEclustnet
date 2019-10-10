@@ -1,3 +1,29 @@
+#' Reformat matrix of covariates.
+#'
+#' This function reformats the matrix of input covariates into the required format for the link probabilities and for the mixing proportions.
+#'
+#' @param covars The n x p data frame of node specific covariates passed in to the overall \code{\link{MEclustnet}} function. The first column should be a column of 1's and categorical variables should be factors.
+#' @param link.vars A vector detailing the column numbers of the matrix covars that should be included in the link probabilities model.
+#' @param mix.vars A vector detailing the column numbers of the matrix covars that should be included in the mixing proportions probabilities model.
+#' @param n The number of nodes in the network.
+#'
+#' @details For the link regression model, the difference in the link.vars covariates, for all pairs of nodes is calculated.
+#' For the mixing proportions model, the required representation of the mix.vars required is formed, where for categorical/factor variables a dummy value representation is used.
+#'
+#' @return A list with
+#' \describe{
+#' \item{x.link }{A matrix with \eqn{n^2} rows and length(link.vars) columns, detailing the differences in covariates for all pairs of nodes.}
+#' \item{x.mix }{A matrix with n rows and number of columns equal to the number of variables detailed in mix.vars, where dummy variable representations will be used for categorical.factor covariates.}
+#' }
+#' @seealso \code{\link{MEclustnet}}
+#' @references Isobel Claire Gormley and Thomas Brendan Murphy. (2010) A Mixture of Experts Latent Position Cluster Model for Social Network Data. Statistical Methodology, 7 (3), pp.385-405.
+#' @examples data(us.twitter.covariates)
+#' link.vars = c(1)
+#' mix.vars = c(1,5,7,8)
+#' res = formatting.covars(us.twitter.covariates, link.vars, mix.vars, nrow(us.twitter.covariates))
+#' dim(res$x.link)
+#' dim(res$x.mix)
+#' @export
 formatting.covars <-
 function(covars, link.vars, mix.vars, n)
 {
